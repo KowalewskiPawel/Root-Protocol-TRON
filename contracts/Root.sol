@@ -6,25 +6,20 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "./libraries/Base64.sol";
-import "./libraries/IterableMapping.sol";
+import "./libraries/IterableMappingPosts.sol";
+
+import {DataTypes} from "./DataTypes.sol";
 
 contract Root is ERC721 {
     struct Member {
         string username;
         string profilePicture;
         uint64 friends;
-        uint64 posts;
-    }
-
-    struct Post {
-        string title;
-        string content;
-        string picture;
-        string video;
+        uint256 posts;
     }
 
     using SafeMath for uint64;
-    using IterableMapping for IterableMapping.Map;
+    using IterableMappingPosts for IterableMappingPosts.Map;
 
     using Counters for Counters.Counter;
 
@@ -32,7 +27,9 @@ contract Root is ERC721 {
 
     mapping(uint256 => Member) public members;
     mapping(uint256 => address) public profilesOwners;
-    mapping(uint256 => Post[]) public postsMapping;
+    // mapping(uint256 => Post[]) public postsMapping;
+    IterableMappingPosts.Map private postsMapping;
+    mapping(uint256 => string[]) public profilePosts;
 
     event ProfileNFTMinted(address sender, uint256 profileId);
     
@@ -110,14 +107,26 @@ contract Root is ERC721 {
         emit ProfileNFTMinted(msg.sender, newProfileId);
     }
 
-    function addPost(Post calldata _postToAdd, uint256 _memberId) external {
+    function addPost(DataTypes.Post calldata _postToAdd, uint256 _memberId) external {
         require(profilesOwners[_memberId] == msg.sender, "Not the owner of the profile");
 
-        postsMapping[_memberId].push(_postToAdd);
+        string memory addressConverted = string(abi.encodePacked(msg.sender));
+        string memory postId = string(abi.encodePacked(Strings.toString(_memberId),'-',Strings.toString(block.timestamp), '-', addressConverted));
+        profilePosts[_memberId].push(postId);
+        uint256 postsLength = profilePosts[_memberId].length;
+        Member storage member = members[_memberId];
+        member.posts = postsLength;   
+        
+        postsMapping.set(postId, _postToAdd);
     }
 
-    function getPosts(uint256 _memberId) public view returns(Post[] memory) {
-        Post[] memory userPosts = postsMapping[_memberId];
+    function getPosts(string memory _postId) public view returns(DataTypes.Post memory) {
+        DataTypes.Post memory userPosts = postsMapping.get(_postId);
         return userPosts;
     }
+
+    function getUsersPostsIds(uint256 _memberId) public view returns(string[] memory) {
+        string[] memory postsIds = profilePosts[_memberId];
+        return postsIds;
+    } 
 }
