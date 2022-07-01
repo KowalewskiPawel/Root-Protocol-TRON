@@ -16,6 +16,13 @@ contract Root is ERC721 {
         uint64 posts;
     }
 
+    struct Post {
+        string title;
+        string content;
+        string[] pictures;
+        string[] videos;
+    }
+
     using SafeMath for uint64;
     using IterableMapping for IterableMapping.Map;
 
@@ -42,7 +49,7 @@ contract Root is ERC721 {
         ];
 
         string
-            memory profilePicture = "";
+            memory profilePicture = memberAttributes.profilePicture;
         string memory friends = Strings.toString(memberAttributes.friends);
         string memory posts = Strings.toString(memberAttributes.posts);
 
