@@ -111,7 +111,7 @@ contract Root is ERC721 {
     }
 
     function addPost(Post calldata _postToAdd, uint256 _memberId) external {
-        require(profilesOwners[_memberId] == msg.sender, "Only owners of the profiles can add posts");
+        require(profilesOwners[_memberId] == msg.sender, "Not the owner of the profile");
 
         postsMapping[_memberId].push(_postToAdd);
     }
