@@ -19,8 +19,8 @@ contract Root is ERC721 {
     struct Post {
         string title;
         string content;
-        string[] pictures;
-        string[] videos;
+        string picture;
+        string video;
     }
 
     using SafeMath for uint64;
@@ -32,6 +32,7 @@ contract Root is ERC721 {
 
     mapping(uint256 => Member) public members;
     mapping(uint256 => address) public profilesOwners;
+    mapping(uint256 => Post[]) public postsMapping;
 
     event ProfileNFTMinted(address sender, uint256 profileId);
     
