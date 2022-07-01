@@ -19,8 +19,8 @@ contract Root is ERC721 {
     struct Post {
         string title;
         string content;
-        string[] pictures;
-        string[] videos;
+        string picture;
+        string video;
     }
 
     using SafeMath for uint64;
@@ -32,6 +32,7 @@ contract Root is ERC721 {
 
     mapping(uint256 => Member) public members;
     mapping(uint256 => address) public profilesOwners;
+    mapping(uint256 => Post[]) public postsMapping;
 
     event ProfileNFTMinted(address sender, uint256 profileId);
     
@@ -107,5 +108,16 @@ contract Root is ERC721 {
         _profileId.increment();
 
         emit ProfileNFTMinted(msg.sender, newProfileId);
+    }
+
+    function addPost(Post calldata _postToAdd, uint256 _memberId) external {
+        require(profilesOwners[_memberId] == msg.sender, "Only owners of the profiles can add posts");
+
+        postsMapping[_memberId].push(_postToAdd);
+    }
+
+    function getPosts(uint256 _memberId) public view returns(Post[] memory) {
+        Post[] memory userPosts = postsMapping[_memberId];
+        return userPosts;
     }
 }
