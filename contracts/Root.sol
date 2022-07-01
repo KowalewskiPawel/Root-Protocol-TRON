@@ -109,4 +109,15 @@ contract Root is ERC721 {
 
         emit ProfileNFTMinted(msg.sender, newProfileId);
     }
+
+    function addPost(Post calldata _postToAdd, uint256 _memberId) external {
+        require(profilesOwners[_memberId] == msg.sender, "Only owners of the profiles can add posts");
+
+        postsMapping[_memberId].push(_postToAdd);
+    }
+
+    function getPosts(uint256 _memberId) public view returns(Post[] memory) {
+        Post[] memory userPosts = postsMapping[_memberId];
+        return userPosts;
+    }
 }
