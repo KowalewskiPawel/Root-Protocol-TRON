@@ -24,6 +24,7 @@ contract Root is ERC721 {
     using Counters for Counters.Counter;
 
     Counters.Counter private _profileId;
+    Counters.Counter private _postNumber;
 
     mapping(uint256 => Member) public members;
     mapping(uint256 => address) public profilesOwners;
@@ -109,9 +110,8 @@ contract Root is ERC721 {
 
     function addPost(DataTypes.Post calldata _postToAdd, uint256 _memberId) external {
         require(profilesOwners[_memberId] == msg.sender, "Not the owner of the profile");
-
-        string memory addressConverted = string(abi.encodePacked(msg.sender));
-        string memory postId = string(abi.encodePacked(Strings.toString(_memberId),'-',Strings.toString(block.timestamp), '-', addressConverted));
+        string memory postId = string(abi.encodePacked(Strings.toString(_memberId),'-',Strings.toString(_postNumber.current())));
+        _postNumber.increment();
         profilePosts[_memberId].push(postId);
         uint256 postsLength = profilePosts[_memberId].length;
         Member storage member = members[_memberId];
