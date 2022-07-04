@@ -14,7 +14,7 @@ contract Root is ERC721 {
     struct Member {
         string username;
         string profilePicture;
-        uint64 friends;
+        uint64 followers;
         uint256 posts;
     }
 
@@ -28,13 +28,25 @@ contract Root is ERC721 {
 
     mapping(uint256 => Member) public members;
     mapping(uint256 => address) public profilesOwners;
-    // mapping(uint256 => Post[]) public postsMapping;
     IterableMappingPosts.Map private postsMapping;
     mapping(uint256 => string[]) public profilePosts;
+    mapping(string => DataTypes.Comment[]) public postComments;
+    mapping(string => bool) public doesPostExist;
+
 
     event ProfileNFTMinted(address sender, uint256 profileId);
     
     constructor() ERC721("Profile", "ROOT") {
+    }
+
+    modifier isProfileOwner(uint256 _memberId) {
+        require(profilesOwners[_memberId] == msg.sender, "Not the owner of the profile");
+        _;
+    }
+
+    modifier postExist(string memory _postToCheck) {
+        require(doesPostExist[_postToCheck], "Post doesn't exist!");
+        _;
     }
 
     function tokenURI(uint256 _tokenId)
@@ -49,7 +61,7 @@ contract Root is ERC721 {
 
         string
             memory profilePicture = memberAttributes.profilePicture;
-        string memory friends = Strings.toString(memberAttributes.friends);
+        string memory followers = Strings.toString(memberAttributes.followers);
         string memory posts = Strings.toString(memberAttributes.posts);
 
         string memory json = Base64.encode(
@@ -62,8 +74,8 @@ contract Root is ERC721 {
                         Strings.toString(_tokenId),
                         '", "description": "Profile NFT", "image": "',
                         profilePicture,
-                        '","attributes": [ { "trait_type": "Friends", "value": ',
-                        friends,
+                        '","attributes": [ { "trait_type": "Followers", "value": ',
+                        followers,
                         '}, { "trait_type": "Posts", "value": ',
                         posts,
                         '}} ]}'
@@ -97,7 +109,7 @@ contract Root is ERC721 {
         members[newProfileId] = Member({
             username: _username,
             profilePicture: _profilePicture,
-            friends: 0,
+            followers: 0,
             posts: 0
         });
 
@@ -108,19 +120,28 @@ contract Root is ERC721 {
         emit ProfileNFTMinted(msg.sender, newProfileId);
     }
 
-    function addPost(DataTypes.Post calldata _postToAdd, uint256 _memberId) external {
-        require(profilesOwners[_memberId] == msg.sender, "Not the owner of the profile");
+    function addPost(DataTypes.PostClient calldata _postToAdd, uint256 _memberId) external isProfileOwner(_memberId) {
         string memory postId = string(abi.encodePacked(Strings.toString(_memberId),'-',Strings.toString(_postNumber.current())));
         _postNumber.increment();
         profilePosts[_memberId].push(postId);
         uint256 postsLength = profilePosts[_memberId].length;
         Member storage member = members[_memberId];
-        member.posts = postsLength;   
+        member.posts = postsLength;
+        doesPostExist[postId] = true;
+
+        DataTypes.Post memory newPost = DataTypes.Post({
+            title: _postToAdd.title,
+            content: _postToAdd.content,
+            picture: _postToAdd.picture,
+            video: _postToAdd.video,
+            authorId: _memberId,
+            date: block.timestamp
+        });
         
-        postsMapping.set(postId, _postToAdd);
+        postsMapping.set(postId, newPost);
     }
 
-    function getPosts(string memory _postId) public view returns(DataTypes.Post memory) {
+    function getPost(string memory _postId) public view returns(DataTypes.Post memory) {
         DataTypes.Post memory userPosts = postsMapping.get(_postId);
         return userPosts;
     }
@@ -128,5 +149,18 @@ contract Root is ERC721 {
     function getUsersPostsIds(uint256 _memberId) public view returns(string[] memory) {
         string[] memory postsIds = profilePosts[_memberId];
         return postsIds;
-    } 
+    }
+
+    function addComment(string memory _commentToAdd, string memory _postId, uint256 _memberId) external postExist(_postId) isProfileOwner(_memberId) {
+        DataTypes.Comment memory newComment = DataTypes.Comment({
+            content: _commentToAdd,
+            authorId: _memberId,
+            date: block.timestamp
+        });
+        postComments[_postId].push(newComment);
+    }
+
+    function getComments(string memory _postId) public view postExist(_postId) returns(DataTypes.Comment[] memory){
+        return postComments[_postId];
+    }
 }
