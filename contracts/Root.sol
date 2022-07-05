@@ -14,7 +14,7 @@ contract Root is ERC721 {
     struct Member {
         string username;
         string profilePicture;
-        uint64 followers;
+        uint256 followers;
         uint256 posts;
     }
 
@@ -30,8 +30,10 @@ contract Root is ERC721 {
     mapping(uint256 => address) public profilesOwners;
     IterableMappingPosts.Map private postsMapping;
     mapping(uint256 => string[]) public profilePosts;
+    mapping(uint256 => uint256[]) public profileFollowers;
     mapping(string => DataTypes.Comment[]) public postComments;
     mapping(string => bool) public doesPostExist;
+    mapping(uint256 => bool) public doesProfileExist;
 
 
     event ProfileNFTMinted(address sender, uint256 profileId);
@@ -41,6 +43,11 @@ contract Root is ERC721 {
 
     modifier isProfileOwner(uint256 _memberId) {
         require(profilesOwners[_memberId] == msg.sender, "Not the owner of the profile");
+        _;
+    }
+
+    modifier doesUserExist(uint256 _userId) {
+        require(doesProfileExist[_userId], "Profile doesn't exist");
         _;
     }
 
@@ -61,7 +68,7 @@ contract Root is ERC721 {
 
         string
             memory profilePicture = memberAttributes.profilePicture;
-        string memory followers = Strings.toString(memberAttributes.followers);
+        string memory followers = Strings.toString(profileFollowers[_tokenId].length);
         string memory posts = Strings.toString(memberAttributes.posts);
 
         string memory json = Base64.encode(
@@ -115,6 +122,8 @@ contract Root is ERC721 {
 
         profilesOwners[newProfileId] = msg.sender;
 
+        doesProfileExist[newProfileId] = true;
+
         _profileId.increment();
 
         emit ProfileNFTMinted(msg.sender, newProfileId);
@@ -162,5 +171,13 @@ contract Root is ERC721 {
 
     function getComments(string memory _postId) public view postExist(_postId) returns(DataTypes.Comment[] memory){
         return postComments[_postId];
+    }
+
+    function followProfile(uint256 _followerId, uint256 _followedId) external isProfileOwner(_followerId) doesUserExist(_followerId) {
+        profileFollowers[_followedId].push(_followerId);
+    }
+
+    function getProfileFollowers(uint256 _followedProfileId) public view doesUserExist(_followedProfileId) returns(uint256[] memory) {
+        return profileFollowers[_followedProfileId];
     }
 }
