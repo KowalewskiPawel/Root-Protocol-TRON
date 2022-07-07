@@ -36,7 +36,10 @@ contract Root is ERC721 {
     mapping(uint256 => bool) public doesProfileExist;
 
 
-    event ProfileNFTMinted(address sender, uint256 profileId);
+    event ProfileNFTMinted(address sender, uint256 profileId, Member memberData);
+    event PostAdded(DataTypes.Post postAdded);
+    event CommentAdded(DataTypes.Comment commentAdded, string postId);
+    event ProfileFollowed(uint256 follower, uint256 followed);
     
     constructor() ERC721("Profile", "ROOT") {
     }
@@ -112,6 +115,13 @@ contract Root is ERC721 {
         uint256 newProfileId = _profileId.current();
 
         _safeMint(msg.sender, newProfileId);
+        
+        Member memory newProfile = Member({
+            username: _username,
+            profilePicture: _profilePicture,
+            followers: 0,
+            posts: 0
+        });
 
         members[newProfileId] = Member({
             username: _username,
@@ -126,7 +136,7 @@ contract Root is ERC721 {
 
         _profileId.increment();
 
-        emit ProfileNFTMinted(msg.sender, newProfileId);
+        emit ProfileNFTMinted(msg.sender, newProfileId, newProfile);
     }
 
     function addPost(DataTypes.PostClient calldata _postToAdd, uint256 _memberId) external isProfileOwner(_memberId) {
@@ -146,6 +156,8 @@ contract Root is ERC721 {
             authorId: _memberId,
             date: block.timestamp
         });
+
+        emit PostAdded(newPost);
         
         postsMapping.set(postId, newPost);
     }
@@ -161,11 +173,15 @@ contract Root is ERC721 {
     }
 
     function addComment(string memory _commentToAdd, string memory _postId, uint256 _memberId) external postExist(_postId) isProfileOwner(_memberId) {
+        
         DataTypes.Comment memory newComment = DataTypes.Comment({
             content: _commentToAdd,
             authorId: _memberId,
             date: block.timestamp
         });
+
+        emit CommentAdded(newComment, _postId);
+
         postComments[_postId].push(newComment);
     }
 
@@ -175,6 +191,8 @@ contract Root is ERC721 {
 
     function followProfile(uint256 _followerId, uint256 _followedId) external isProfileOwner(_followerId) doesUserExist(_followerId) {
         profileFollowers[_followedId].push(_followerId);
+
+        emit ProfileFollowed(_followerId, _followedId);
     }
 
     function getProfileFollowers(uint256 _followedProfileId) public view doesUserExist(_followedProfileId) returns(uint256[] memory) {
