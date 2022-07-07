@@ -9,13 +9,17 @@ import "solidity-coverage";
 
 dotenv.config();
 
-const { API_URL, PRIVATE_KEY } = process.env;
+const { API_URL, PRIVATE_KEY, RINKEBY_API_URL } = process.env;
 
 const config: HardhatUserConfig = {
   solidity: "0.8.1",
   networks: {
     mumbai: {
       url: API_URL,
+      accounts: [`0x${PRIVATE_KEY}`],
+    },
+    rinkeby: {
+      url: RINKEBY_API_URL,
       accounts: [`0x${PRIVATE_KEY}`],
     },
   },
