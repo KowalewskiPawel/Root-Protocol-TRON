@@ -28,6 +28,7 @@ contract Root is ERC721 {
     mapping(string => DataTypes.Comment[]) public postComments;
     mapping(string => bool) public doesPostExist;
     mapping(uint256 => bool) public doesProfileExist;
+    mapping(string => bool) public doesUsernameExist;
 
 
     event ProfileNFTMinted(address sender, uint256 profileId, DataTypes.Member memberData);
@@ -50,6 +51,11 @@ contract Root is ERC721 {
 
     modifier postExist(string memory _postToCheck) {
         require(doesPostExist[_postToCheck], "Post doesn't exist!");
+        _;
+    }
+
+    modifier usernameExist(string memory _username) {
+        require(!doesUsernameExist[_username], "Username already exist!");
         _;
     }
 
@@ -104,7 +110,7 @@ contract Root is ERC721 {
     }
 
         function mintProfileNFT(string memory _username, string memory _profilePicture)
-        external
+        external usernameExist(_username)
     {
         uint256 newProfileId = _profileId.current();
 
@@ -123,6 +129,7 @@ contract Root is ERC721 {
         profilesOwners[newProfileId] = msg.sender;
 
         doesProfileExist[newProfileId] = true;
+        doesUsernameExist[_username] = true;
 
         _profileId.increment();
 
