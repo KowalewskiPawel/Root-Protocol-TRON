@@ -11,12 +11,6 @@ import "./libraries/IterableMappingPosts.sol";
 import {DataTypes} from "./DataTypes.sol";
 
 contract Root is ERC721 {
-    struct Member {
-        string username;
-        string profilePicture;
-        uint256 followers;
-        uint256 posts;
-    }
 
     using SafeMath for uint64;
     using IterableMappingPosts for IterableMappingPosts.Map;
@@ -26,7 +20,7 @@ contract Root is ERC721 {
     Counters.Counter private _profileId;
     Counters.Counter private _postNumber;
 
-    mapping(uint256 => Member) public members;
+    mapping(uint256 => DataTypes.Member) public members;
     mapping(uint256 => address) public profilesOwners;
     IterableMappingPosts.Map private postsMapping;
     mapping(uint256 => string[]) public profilePosts;
@@ -36,9 +30,9 @@ contract Root is ERC721 {
     mapping(uint256 => bool) public doesProfileExist;
 
 
-    event ProfileNFTMinted(address sender, uint256 profileId, Member memberData);
+    event ProfileNFTMinted(address sender, uint256 profileId, DataTypes.Member memberData);
     event PostAdded(DataTypes.Post postAdded);
-    event CommentAdded(DataTypes.Comment commentAdded, string postId);
+    event CommentAdded(DataTypes.Comment commentAdded);
     event ProfileFollowed(uint256 follower, uint256 followed);
     
     constructor() ERC721("Profile", "ROOT") {
@@ -65,7 +59,7 @@ contract Root is ERC721 {
         override
         returns (string memory)
     {
-        Member memory memberAttributes = members[
+        DataTypes.Member memory memberAttributes = members[
             _tokenId
         ];
 
@@ -101,7 +95,7 @@ contract Root is ERC721 {
         return output;
     }
 
-    function checkProfileOwner(uint256 _memberProfileId) public view returns (Member memory) {
+    function checkProfileOwner(uint256 _memberProfileId) public view returns (DataTypes.Member memory) {
         if (profilesOwners[_memberProfileId] == msg.sender) {
             return members[_memberProfileId];
         } else {
@@ -116,19 +110,15 @@ contract Root is ERC721 {
 
         _safeMint(msg.sender, newProfileId);
         
-        Member memory newProfile = Member({
+        DataTypes.Member memory newProfile = DataTypes.Member({
+            userId: newProfileId,
             username: _username,
             profilePicture: _profilePicture,
             followers: 0,
             posts: 0
         });
 
-        members[newProfileId] = Member({
-            username: _username,
-            profilePicture: _profilePicture,
-            followers: 0,
-            posts: 0
-        });
+        members[newProfileId] = newProfile;
 
         profilesOwners[newProfileId] = msg.sender;
 
@@ -144,11 +134,12 @@ contract Root is ERC721 {
         _postNumber.increment();
         profilePosts[_memberId].push(postId);
         uint256 postsLength = profilePosts[_memberId].length;
-        Member storage member = members[_memberId];
+        DataTypes.Member storage member = members[_memberId];
         member.posts = postsLength;
         doesPostExist[postId] = true;
 
         DataTypes.Post memory newPost = DataTypes.Post({
+            id: postId,
             title: _postToAdd.title,
             content: _postToAdd.content,
             picture: _postToAdd.picture,
@@ -175,12 +166,13 @@ contract Root is ERC721 {
     function addComment(string memory _commentToAdd, string memory _postId, uint256 _memberId) external postExist(_postId) isProfileOwner(_memberId) {
         
         DataTypes.Comment memory newComment = DataTypes.Comment({
+            idOfPost: _postId,
             content: _commentToAdd,
             authorId: _memberId,
             date: block.timestamp
         });
 
-        emit CommentAdded(newComment, _postId);
+        emit CommentAdded(newComment);
 
         postComments[_postId].push(newComment);
     }
