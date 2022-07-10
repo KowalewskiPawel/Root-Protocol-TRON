@@ -15,6 +15,7 @@ library DataTypes {
     struct Comment {
         string idOfPost;
         string content;
+        string username;
         uint authorId;
         uint date;
     }
@@ -25,6 +26,7 @@ library DataTypes {
         string content;
         string picture;
         string video;
+        string username;
         uint authorId;
         uint date;
     }
