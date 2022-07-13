@@ -78,17 +78,15 @@ contract Root is ERC721 {
             bytes(
                 string(
                     abi.encodePacked(
-                         '{"username": "',
+                        '{"name": "',
                         memberAttributes.username,
-                        "Member No: ",
-                        Strings.toString(_tokenId),
-                        '", "description": "Profile NFT", "image": "',
+                        '", "description": "Root Profile NFT", "image": "',
                         profilePicture,
                         '","attributes": [ { "trait_type": "Followers", "value": ',
                         followers,
                         '}, { "trait_type": "Posts", "value": ',
                         posts,
-                        '}} ]}'
+                        "} ]}"
                     )
                 )
             )
@@ -97,7 +95,7 @@ contract Root is ERC721 {
         string memory output = string(
             abi.encodePacked("data:application/json;base64,", json)
         );
-
+        
         return output;
     }
 
@@ -113,7 +111,6 @@ contract Root is ERC721 {
         external usernameExist(_username)
     {
         uint256 newProfileId = _profileId.current();
-
         _safeMint(msg.sender, newProfileId);
         
         DataTypes.Member memory newProfile = DataTypes.Member({
@@ -125,14 +122,10 @@ contract Root is ERC721 {
         });
 
         members[newProfileId] = newProfile;
-
         profilesOwners[newProfileId] = msg.sender;
-
         doesProfileExist[newProfileId] = true;
         doesUsernameExist[_username] = true;
-
         _profileId.increment();
-
         emit ProfileNFTMinted(msg.sender, newProfileId, newProfile);
     }
 
@@ -152,12 +145,12 @@ contract Root is ERC721 {
             picture: _postToAdd.picture,
             video: _postToAdd.video,
             authorId: _memberId,
+            username: members[_memberId].username,
             date: block.timestamp
         });
 
-        emit PostAdded(newPost);
-        
         postsMapping.set(postId, newPost);
+        emit PostAdded(newPost);
     }
 
     function getPost(string memory _postId) public view returns(DataTypes.Post memory) {
@@ -174,14 +167,14 @@ contract Root is ERC721 {
         
         DataTypes.Comment memory newComment = DataTypes.Comment({
             idOfPost: _postId,
+            username: members[_memberId].username,
             content: _commentToAdd,
             authorId: _memberId,
             date: block.timestamp
         });
 
-        emit CommentAdded(newComment);
-
         postComments[_postId].push(newComment);
+        emit CommentAdded(newComment);
     }
 
     function getComments(string memory _postId) public view postExist(_postId) returns(DataTypes.Comment[] memory){
@@ -190,7 +183,6 @@ contract Root is ERC721 {
 
     function followProfile(uint256 _followerId, uint256 _followedId) external isProfileOwner(_followerId) doesUserExist(_followerId) {
         profileFollowers[_followedId].push(_followerId);
-
         emit ProfileFollowed(_followerId, _followedId);
     }
 
