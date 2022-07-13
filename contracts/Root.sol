@@ -78,18 +78,15 @@ contract Root is ERC721 {
             bytes(
                 string(
                     abi.encodePacked(
-                         '{"Username": "'
-                        ,
-                        memberAttributes.username
-                        ,'","Member No: "',
-                        Strings.toString(_tokenId),
-                        '", "description": "Profile NFT", "image": "',
+                        '{"name": "',
+                        memberAttributes.username,
+                        '", "description": "Root Profile NFT", "image": "',
                         profilePicture,
                         '","attributes": [ { "trait_type": "Followers", "value": ',
                         followers,
                         '}, { "trait_type": "Posts", "value": ',
                         posts,
-                        '}} ]}'
+                        "} ]}"
                     )
                 )
             )
