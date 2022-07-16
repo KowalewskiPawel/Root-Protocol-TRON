@@ -4,7 +4,7 @@ module.exports = {
   networks: {
     mainnet: {
       // Don't put your private key here:
-      privateKey: process.env.PRIVATE_KEY_MAINNET,
+      privateKey: process.env.PRIVATE_KEY,
       /*
 Create a .env file (it must be gitignored) containing something like
 
@@ -21,14 +21,14 @@ Then, run the migration with:
       network_id: "1",
     },
     shasta: {
-      privateKey: process.env.PRIVATE_KEY_SHASTA,
+      privateKey: process.env.PRIVATE_KEY,
       userFeePercentage: 50,
       feeLimit: 1000 * 1e6,
       fullHost: "https://api.shasta.trongrid.io",
       network_id: "2",
     },
     nile: {
-      privateKey: process.env.PRIVATE_KEY_NILE,
+      privateKey: process.env.PRIVATE_KEY,
       userFeePercentage: 100,
       feeLimit: 1000 * 1e6,
       fullHost: "https://api.nileex.io",
