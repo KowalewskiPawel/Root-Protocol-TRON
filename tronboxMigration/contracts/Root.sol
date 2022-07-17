@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma experimental ABIEncoderV2;
+pragma solidity 0.5.18;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@ttcrypto/openzeppelin-tron-contracts/contracts/token/ERC721/ERC721.sol";
+import "@ttcrypto/openzeppelin-tron-contracts/contracts/utils/Counters.sol";
 
 import "./libraries/Base64.sol";
 import "./libraries/IterableMappingPosts.sol";
@@ -12,7 +12,6 @@ import {DataTypes} from "./DataTypes.sol";
 
 contract Root is ERC721 {
 
-    using SafeMath for uint64;
     using IterableMappingPosts for IterableMappingPosts.Map;
 
     using Counters for Counters.Counter;
@@ -36,7 +35,7 @@ contract Root is ERC721 {
     event CommentAdded(DataTypes.Comment commentAdded);
     event ProfileFollowed(uint256 follower, uint256 followed);
     
-    constructor() ERC721("Profile", "ROOT") {
+    constructor() ERC721("Profile", "ROOT") public {
     }
 
     modifier isProfileOwner(uint256 _memberId) {
@@ -62,7 +61,6 @@ contract Root is ERC721 {
     function tokenURI(uint256 _tokenId)
         public
         view
-        override
         returns (string memory)
     {
         DataTypes.Member memory memberAttributes = members[
@@ -107,7 +105,7 @@ contract Root is ERC721 {
         }
     }
 
-        function mintProfileNFT(string memory _username, string memory _profilePicture)
+        function mintProfileNFT(string calldata _username, string calldata _profilePicture)
         external usernameExist(_username)
     {
         uint256 newProfileId = _profileId.current();
@@ -163,7 +161,7 @@ contract Root is ERC721 {
         return postsIds;
     }
 
-    function addComment(string memory _commentToAdd, string memory _postId, uint256 _memberId) external postExist(_postId) isProfileOwner(_memberId) {
+    function addComment(string calldata _commentToAdd, string calldata _postId, uint256 _memberId) external postExist(_postId) isProfileOwner(_memberId) {
         
         DataTypes.Comment memory newComment = DataTypes.Comment({
             idOfPost: _postId,
