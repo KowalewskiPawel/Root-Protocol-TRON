@@ -1,10 +1,9 @@
-var Root = artifacts.require("./Root.sol");
-var MappingPost = artifacts.require("./libraries/IterableMappingPosts.sol");
-var Mapping = artifacts.require("./libraries/IterableMapping.sol");
+const Root = artifacts.require("./Root.sol");
+const MappingPost = artifacts.require("./libraries/IterableMappingPosts.sol");
+const Base64 = artifacts.require("./libraries/Base64.sol");
 
 module.exports = async function (deployer) {
-  const mappingPosts = await deployer.deploy(MappingPost);
-  const mapping = await deployer.deploy(Mapping);
-
-  deployer.deploy(Root, mappingPosts.address, mapping.address);
+  deployer
+    .deploy(MappingPost)
+    .then((DeployedMapping) => deployer.deploy(Root, DeployedMapping.address));
 };
